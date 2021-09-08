@@ -29,11 +29,82 @@ class Taxes:
         kratiseis_efka = round(mikta_final * pefka / 100.0, 2)
         forologiteo = round(mikta_final - kratiseis_efka, 2)
         res = self.foroi_period(forologiteo, children)
-        res['pefka'] = pefka
-        res['efka'] = kratiseis_efka
-        res['mikta'] = mikta_final
+        res["pefka"] = pefka
+        res["efka"] = kratiseis_efka
+        res["mikta"] = mikta_final
         return res
 
+    def mikta_apo_kathara_full(self, kathara, meres, kids, pefka):
+        d = round(25 / 200.0 * 1.04167, 7)
+        a = round(13 / 150.0, 7)
+        p = round(pefka / 100.0, 5)
+        syn = 1 + d + 2 * a - p - p * d - p * a
+        mikta = round((kathara / syn) / meres, 2)
+        # rmikta = round(mikta * syn)
+        # refka = round(mikta * p * (1 + d + a), 2)
+        res = self._mikta(mikta, meres, pefka, kids)
+        delta = kathara - res["clean_final"]
+
+        i = 0
+        replications = 0
+        while abs(delta) > 0.004 and i < 100:
+            i += 1
+            mikta += delta / meres
+            mikta = round(mikta, 5)
+            res = self._mikta(mikta, meres, pefka, kids)
+            delta = round(kathara - res["clean_final"], 6)
+            print(mikta, delta)
+
+            if abs(round(delta, 2)) <= 0.01:
+                replications += 1
+            if replications >= 3:
+                break
+        print(i)
+        mikta = round(mikta, 2)
+        return self._mikta(mikta, meres, pefka, kids)
+
+    def _mikta(self, mikta, meres, pefka, kids):
+        apod = round(mikta * meres, 2)
+        doro = round((mikta * 25 * meres / 200.0) * 1.04167, 2)
+        eadi = round(mikta * 13 * meres / 150, 2)
+        adei = round(mikta * 13 * meres / 150, 2)
+        tota = round(apod + doro + eadi + adei, 2)
+        # tota = round(tot1 + adei, 2)
+        efka_apod = round(apod * pefka / 100.0, 2)
+        efka_doro = round(doro * pefka / 100.0, 2)
+        efka_eadi = round(eadi * pefka / 100.0, 2)
+        efka_total = round(efka_apod + efka_doro + efka_eadi, 2)
+        clean_apod = round(apod - efka_apod, 2)
+        clean_doro = doro - efka_doro
+        clean_eadi = eadi - efka_eadi
+        clean_adei = adei
+        clean_total = round(clean_apod + clean_doro + clean_eadi + clean_adei, 2)
+        foro_apod = self.foroi_period(clean_apod, kids)["total_taxes"]
+        foro_doro = self.foroi_period(clean_doro, kids)["total_taxes"]
+        foro_eadi = self.foroi_period(clean_eadi, kids, 28)["total_taxes"]
+        foro_total = foro_apod + foro_doro + foro_eadi
+        clean_final = round(clean_total - foro_total, 2)
+
+        return {
+            "imeromisthio": mikta,
+            'meres': meres,
+            "apod": apod,
+            "doro": doro,
+            "eadi": eadi,
+            "adei": adei,
+            "efka_apod": efka_apod,
+            "efka_doro": efka_doro,
+            "efka_eadi": efka_eadi,
+            'clean_apod': clean_apod,
+            "foro_apod": foro_apod,
+            "foro_doro": foro_doro,
+            "foro_eadi": foro_eadi,
+            "foro_total": foro_total,
+            "dirty_total": tota,
+            "efka_total": efka_total,
+            "clean_total": clean_total,
+            "clean_final": clean_final,
+        }
 
     def foros_eis_eea(self, income, children=0):
         tax = self.foros_eisodimatos(income, children)

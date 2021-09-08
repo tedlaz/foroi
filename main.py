@@ -59,7 +59,7 @@ app.add_middleware(
 )
 
 
-@app.get("/", response_class=RedirectResponse)
+@app.get("/", response_class=RedirectResponse, include_in_schema=False)
 async def main():
     return "https://tpcvju.deta.dev/docs"
 

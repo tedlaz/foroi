@@ -29,3 +29,8 @@ class Tax2021(Taxes):
 
     def foros_tokon(self, tokoi):
         return round(tokoi * 0.15, 2)
+
+
+if __name__ == "__main__":
+    tax = Tax2021()
+    print(tax.mikta_apo_kathara_full(942, 1, 0, 14.2))
