@@ -57,7 +57,7 @@ class Taxes:
         tax = round(foros_etoys / barytis, 2)
         eea = round(eea_etoys / barytis, 2)
         total_taxes = round(tax + eea, 2)
-        after_taxes = apodoxes - total_taxes
+        after_taxes = round(apodoxes - total_taxes, 2)
         return {
             "tax_year": self.year,
             "income": apodoxes,
