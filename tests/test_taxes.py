@@ -1,6 +1,6 @@
 from unittest import TestCase
 # from decimal import Decimal
-import taxes as tx1
+import taxes_old as tx1
 
 
 class TestTaxes(TestCase):
@@ -81,4 +81,4 @@ class TestTaxes(TestCase):
         res = clc.foros_total(misthoi=19878.24, enoikia=2400, tokoi=10.62)
         self.assertEqual(res['final_foros'], 2797.36)
         # print(clc.foros_total(misthoi=14000))
-        # print(clc.foros_misthoton_periodoy(misthos=1000))
+        print(clc.foros_misthoton_periodoy(misthos=1000))

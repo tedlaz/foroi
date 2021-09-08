@@ -1,0 +1,341 @@
+"""Various functions for tax purposes"""
+from utils import limit, klimaka
+from grdate import today
+
+# Πριν το 2002 το νόμισμα ήταν η δραχμή
+KLI = {
+    2002: ((7400, 1000, 5000, 10000), (0, 5, 15, 30, 40)),
+    2003: ((11000, 3400, 10000), (0, 15, 30, 40)),
+    2004: ((10000, 3400, 10000), (0, 15, 30, 40)),
+    2005: ((11000, 2000, 10000), (0, 15, 30, 40)),
+    2006: ((11000, 2000, 10000), (0, 15, 30, 40)),
+    2007: ((12000, 18000, 45000), (0, 27, 39, 40)),
+    2008: ((12000, 18000, 45000), (0, 27, 37, 40)),
+    2009: ((12000, 18000, 45000), (0, 25, 35, 40)),
+    2010: (
+        (12000, 4000, 6000, 4000, 6000, 8000, 20000, 40000),
+        (0, 18, 24, 26, 32, 36, 38, 40, 45),
+    ),
+    2011: (
+        (5000, 7000, 4000, 10000, 14000, 20000, 40000),
+        (0, 10, 18, 25, 35, 38, 40, 45),
+    ),
+    2012: (
+        (5000, 7000, 4000, 10000, 14000, 20000, 40000),
+        (0, 10, 18, 25, 35, 38, 40, 45),
+    ),
+    2013: ((25000, 17000), (22, 32, 42)),
+    2014: ((25000, 17000), (22, 32, 42)),
+    2015: ((25000, 17000), (22, 32, 42)),
+    2016: ((20000, 10000, 10000), (22, 29, 37, 45)),
+    2017: ((20000, 10000, 10000), (22, 29, 37, 45)),
+    2018: ((20000, 10000, 10000), (22, 29, 37, 45)),
+    2019: ((20000, 10000, 10000), (22, 29, 37, 45)),
+    2020: ((10000, 10000, 10000, 10000), (9, 22, 28, 36, 44)),
+    2021: ((10000, 10000, 10000, 10000), (9, 22, 28, 36, 44)),
+}
+
+MEI = {
+    2017: ((0, 1, 2, 3), (1900, 1950, 2000, 2100)),
+    2018: ((0, 1, 2, 3), (1900, 1950, 2000, 2100)),
+    2019: ((0, 1, 2, 3), (1900, 1950, 2000, 2100)),
+    2020: ((0, 1, 2, 3, 4, 5), (777, 810, 900, 1120, 1340, 1560)),
+    2021: ((0, 1, 2, 3, 4, 5), (777, 810, 900, 1120, 1340, 1560)),
+}
+
+EEA = {
+    2018: ((12000, 8000, 10000, 10000, 25000, 155000), (0, 2.2, 5, 6.5, 7.5, 9, 10)),
+    2019: ((12000, 8000, 10000, 10000, 25000, 155000), (0, 2.2, 5, 6.5, 7.5, 9, 10)),
+    2020: ((12000, 8000, 10000, 10000, 25000, 155000), (0, 2.2, 5, 6.5, 7.5, 9, 10)),
+    2021: ((12000, 8000, 10000, 10000, 25000, 155000), (0, 2.2, 5, 6.5, 7.5, 9, 10)),
+}
+
+
+def foros_etoys(year: int, yearly_income: float):
+    """Calculates annual tax
+
+    :param year: year
+    :param yearly_income: yearly income
+    :return: yearly tax
+    """
+    # year = int(year)
+    if year not in KLI.keys():
+        raise ValueError("Year is out of scope")
+    scale, percent = KLI[year]
+    return klimaka(yearly_income, scale, percent)
+
+
+def meiosi_foroy(year, yearly_income, children):
+    """Annual tax reduction
+
+    :param year: year
+    :param yearly_income: yearly income
+    :param children: Number of children
+    :return: reduction
+    """
+    children = int(children)  # For calculator module compatibility
+    paidia, meiosi = MEI.get(year, ((0,), (0,)))
+    if children in paidia:
+        total_meiosi = meiosi[children]
+    else:
+        total_meiosi = meiosi[-1]
+    over20k = yearly_income - 20000
+    if over20k <= 0:
+        return total_meiosi
+    times, rest = over20k // 1000, over20k % 1000
+    rest = 1 if rest > 0 else 0
+    final_meiosi = total_meiosi - (times + rest) * 10
+    if final_meiosi > 0:
+        return final_meiosi
+    return 0
+
+
+def foros_etoys_me_ekptosi(year, yearly_income, children=0):
+    """Calculates annual tax with reduction
+
+    :param year: year
+    :param yearly_income: yearly income
+    :param children: Number of children
+    :return: annual tax payable
+    """
+    foros = foros_etoys(year, yearly_income)
+    meion = meiosi_foroy(year, yearly_income, children)
+    final = foros - meion
+    return final if final > 0 else 0
+
+
+def foros_periodoy(year, apodoxes, children=0, barytis=14, extra=0):
+    """Calculates tax for period
+
+    :param year: year
+    :param apodoxes: period income
+    :param children: number of children
+    :param barytis: period slice
+    :param extra: extra income (current period only)
+    :return: period tax payable
+    """
+    yearly = apodoxes * barytis
+    tyearly = (apodoxes * barytis) + extra
+    tforos = foros_etoys_me_ekptosi(year, tyearly, children)
+    foros = foros_etoys_me_ekptosi(year, yearly, children)
+    delta = tforos - foros
+    return round(foros / barytis + delta, 2)
+
+
+def eea_etoys(year, yearly_income):
+    """Calculates special tax
+
+    :param year: year
+    :param yearly_income: yearly income
+    :return: special tax payable
+    """
+    if year not in EEA.keys():
+        return 0
+    scale, percent = EEA[year]
+    return klimaka(yearly_income, scale, percent)
+
+
+def eea_periodoy(year, apodoxes, barytis=14, extra=0):
+    """Calculates special tax for period
+
+    :param year: year
+    :param apodoxes: period income
+    :param barytis: period slice
+    :param extra: extra income (current period only)
+    :return: special tax for period payable
+    """
+    yearly = apodoxes * barytis
+    tyearly = (apodoxes * barytis) + extra
+    teea = eea_etoys(year, tyearly)
+    eea = eea_etoys(year, yearly)
+    delta = teea - eea
+    return round(eea / barytis + delta, 2)
+
+
+def foros_eea_periodoy(year, apodoxes, barytis=14, paidia=0, extra=0):
+    """Calculates tax and special tax together for given period
+
+    :param year: year
+    :param apodoxes: period income
+    :param barytis: period slice
+    :param paidia: number of children
+    :param extra: extra income (current period only)
+    :return: dictionary of tax, special tax, payable
+    """
+    year = int(year)
+    foros = foros_periodoy(year, apodoxes, paidia, barytis, extra)
+    eea = eea_periodoy(year, apodoxes, barytis, extra)
+    apod = apodoxes + extra
+    kath = apod - foros - eea
+    return {"foros": foros, "eea": eea, "forolog": apod, "pliroteo": kath}
+
+
+def reverse_apodoxes(year, katharo, pikaerg, paidia=0):
+    """Να βρούμε από τα καθαρά τα μικτά
+
+    :param year:
+    :param katharo:
+    :param pikaerg:
+    :param paidia:
+    :return:
+    """
+    # katharo = dec(katharo)
+    synt1 = 1 - pikaerg / 100.0
+    mikto = katharo / synt1
+    apot = foros_eea_periodoy(year, katharo)
+
+    delta = katharo - apot["pliroteo"]
+    # print(pros1, delta, apot)
+    i = 0
+    while delta > 0 and i < 100:
+        i += 1
+        mikto += delta
+        ap2 = foros_eea_periodoy(year, mikto * synt1, paidia=paidia)
+        delta = katharo - ap2["pliroteo"]
+    return round(mikto, 2)
+
+
+def mikta_apo_kathara(katharo, pika, paidia=0, period=None):
+    if period is None:
+        period = today("%Y%m")
+    period = str(period)
+    year = period[:4]
+    return reverse_apodoxes(year, katharo, pika, paidia)
+
+
+def test_apodoxes(year, mikto, pikaerg, paidia=0):
+    # mikto = mikto
+    krika = round(mikto * pikaerg / 100.0, 2)
+    forol = mikto - krika
+    result = foros_eea_periodoy(year, forol, paidia=paidia)
+    result["paidia"] = paidia
+    result["mikto"] = mikto
+    result["pika"] = "%s%%" % pikaerg
+    result["ika"] = krika
+    result["krat"] = result["foros"] + result["eea"] + result["ika"]
+    return result
+
+
+def kostos_misthodosias(misthos, pikaergodoti):
+    analogia_doroy = misthos / 8 * 12.5 / 12
+    analogia_epidomatos = misthos / 24
+    analogia_adeias = misthos * 2 / 25
+    mikta = misthos + analogia_doroy + analogia_epidomatos + analogia_adeias
+    ika_ergodoti = mikta * pikaergodoti / 100
+    total = mikta + ika_ergodoti
+    return total
+
+
+def foros2020(income, children=0):
+    # income = dec(income)
+    kli, pos = (10000, 10000, 10000, 10000), (9, 22, 28, 36, 44)
+    foros_xoris_meiosi = klimaka(income, kli, pos)
+    # Μείωση φόρου
+    klimaka_meiosis = (777, 810, 900)
+    if children <= 2:
+        meiosi_total = klimaka_meiosis[children]
+    else:
+        meiosi_total = klimaka_meiosis[2] + 220 * (children - 2)
+    meiosi_meiosis = 0.0
+    if children < 5 and income > 12000:
+        meiosi_meiosis = (income - 12000) // 1000 * 20
+    meiosi_meiosis = limit(val=meiosi_meiosis, limit=meiosi_total)
+    meiosi = meiosi_total - meiosi_meiosis
+    meiosi = limit(val=meiosi, limit=foros_xoris_meiosi)
+    # Φόρος χρήσης
+    foros = foros_xoris_meiosi - meiosi
+    # Ειδικό επίδομα αλληλεγγύης
+    eea_kli = (12000, 8000, 10000, 10000, 25000, 155000)
+    eea_pos = (0, 2.2, 5, 6.5, 7.5, 9, 10)
+    eea = klimaka(income, eea_kli, eea_pos)
+    return {
+        "income": income,
+        "children": children,
+        "foros-xoris-ekptosi": foros_xoris_meiosi,
+        "ekptosi-klimakas": meiosi_total,
+        "meiosi-ekptosis": meiosi_meiosis,
+        "ekptosi-teliki": meiosi,
+        "foros": foros,
+        "eea": eea,
+        "foros-eea": foros + eea,
+        "pososto": round((foros + eea) / income * 100.0, 2),
+        "pliroteo": income - foros - eea,
+    }
+
+
+def foros(etos, income, children=0):
+    forosd = {2020: foros2020, 2021: foros2020}
+    ietos = int(etos)
+    if ietos in forosd:
+        return forosd[ietos](income, children)
+    raise ValueError(f"Δεν υπάρχει υπολογισμός για το έτος {etos}")
+
+
+class Foros2020:
+    def meiosi_paidion(self, paidia=0):
+        assert paidia >= 0
+        paidia_meiosi = {0: 777, 1: 810, 2: 900, 3: 1120, 4: 1340, 5: 1560}
+        return paidia_meiosi.get(paidia, paidia_meiosi[5])
+
+    def meiosi_foroy(self, income, children=0):
+        meiosi = self.meiosi_paidion(children)
+        if income <= 12000:
+            return meiosi
+        delta = income - 12000
+        meiosi -= delta * 0.02
+        if meiosi < 0:
+            return 0
+        return round(meiosi, 2)
+
+    def foros_misthoton(self, income):
+        scale = (10000, 10000, 10000, 10000)
+        syntelestes = (9, 22, 28, 36, 44)
+        return float(klimaka(income, scale, syntelestes))
+
+    def foros_misthoton_periodoy(
+        self, *, misthos: float, paidia: int = 0, barytis: int = 14
+    ):
+        etisio = misthos * barytis
+        fmisthoton = self.foros_misthoton(etisio)
+        meiosi = self.meiosi_foroy(etisio, paidia)
+        fmis = fmisthoton - meiosi
+        fmis = fmis if fmis > 0 else 0
+        fmisper = round(fmis / barytis, 2)
+        return fmisper
+
+    def foros_tokon(self, amount):
+        return round(amount * 0.15, 2)
+
+    def foros_enoikion(self, amount):
+        return round(amount * 0.15, 2)
+
+    def foros_total(
+        self,
+        *,
+        misthoi: float = 0,
+        enoikia: float = 0,
+        tokoi: float = 0,
+        paidia: int = 0,
+    ):
+        fmisthoton = self.foros_misthoton(misthoi)
+        meiosi = self.meiosi_foroy(misthoi, paidia)
+        fmis = fmisthoton - meiosi
+        fmis = fmis if fmis > 0 else 0
+        # if fmis < 0:
+        #     fmis = 0
+        enoikia_final = enoikia - round(enoikia * 0.05, 2)
+        fenoikia = self.foros_enoikion(enoikia_final)
+        ftokon = self.foros_tokon(tokoi)
+        tforos = round(fmisthoton + fenoikia + ftokon, 2)
+        return {
+            "misthoi": misthoi,
+            "enoikia": enoikia_final,
+            "tokoi": tokoi,
+            "total_income": enoikia_final + tokoi + misthoi,
+            "foros_misthoton": fmis,
+            "foros_enoikion": fenoikia,
+            "foros_tokon": ftokon,
+            "total_foros": tforos,
+            "meiosi_foroy": meiosi,
+            "final_foros": fmis + fenoikia + ftokon,
+        }
