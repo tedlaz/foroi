@@ -7,8 +7,6 @@ from fastapi.responses import RedirectResponse
 INFO = "Greek Tax Calculator"
 
 description = """
-Greek Tax Calculator API
-
 ## /tax
 
 example: [https://tpcvju.deta.dev/tax?year=2020&income=870&kids=0](https://tpcvju.deta.dev/tax?year=2020&income=870&kids=0)
@@ -47,9 +45,9 @@ kids: number of kids
 """
 
 app = FastAPI(
-    title="Greek Taxes calculator(By Ted Lazaros)",
+    title="Greek Tax calculator(By Ted Lazaros)",
     description=description,
-    version="0.0.3",
+    version="0.0.4",
 )
 
 app.add_middleware(
