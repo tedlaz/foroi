@@ -1,0 +1,1 @@
+{"id":"9e1c45c5-57a5-4d58-9d7f-febb4ad7366b","space":8729,"runtime":"python3.7","name":"foroi","path":"tpcvju","project":"a01r4q4y","account":"144798365827","region":"eu-central-1","deps":["fastapi","jinja2","aiofiles"],"envs":null,"public":true,"log_level":"debug","cron":""}

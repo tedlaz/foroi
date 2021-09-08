@@ -1,5 +1,6 @@
 class Taxes:
     year = 0
+
     def foros_eisodimatos(self, income, children):
         raise NotImplementedError
 
@@ -16,9 +17,9 @@ class Taxes:
         tax = self.foros_eisodimatos(income, children)
         eea = self.foros_eea(income)
         total_taxes = round(tax + eea, 2)
-        after_taxes = income - total_taxes
+        after_taxes = round(income - total_taxes, 2)
         return {
-            'tax_year': self.year,
+            "tax_year": self.year,
             "income": income,
             "children": children,
             "tax": tax,
@@ -36,14 +37,14 @@ class Taxes:
         total_taxes = round(tax + eea, 2)
         after_taxes = apodoxes - total_taxes
         return {
-            'tax_year': self.year,
-            'income': apodoxes,
-            'children': paidia,
-            'yearly_income': yearly,
-            'yearly_tax': foros_etoys,
-            'yearly_eea': eea_etoys,
+            "tax_year": self.year,
+            "income": apodoxes,
+            "children": paidia,
+            "yearly_income": yearly,
+            "yearly_tax": foros_etoys,
+            "yearly_eea": eea_etoys,
             "tax": tax,
             "eea": eea,
             "total_taxes": total_taxes,
-            "after_taxes": after_taxes
+            "after_taxes": after_taxes,
         }

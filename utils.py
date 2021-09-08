@@ -1,11 +1,4 @@
-from typing import Union
-
-ifl = Union[int, float]
-ltuple = Union[tuple[ifl], list[ifl]]
-tlu = Union[tuple, list]
-
-
-def split2list(val: ifl, alist: tlu) -> list[ifl]:
+def split2list(val, alist) -> list:
     """Splits val according to alist values
 
     :param val: Value to be splitted
@@ -26,7 +19,7 @@ def split2list(val: ifl, alist: tlu) -> list[ifl]:
     return lval
 
 
-def klimaka(value: ifl, scale: tlu, percent: tlu) -> ifl:
+def klimaka(value, scale, percent):
     """Calculate percent of value given scale, percent rate
 
     :param value: Decimal value
@@ -42,7 +35,7 @@ def klimaka(value: ifl, scale: tlu, percent: tlu) -> ifl:
     return round(sum(pval), 2)
 
 
-def distribute(*, val: ifl, dist: ltuple) -> ltuple:
+def distribute(*, val, dist):
     """Distributes value according to alist
     :param value: Value to be distributed
     :param dist: Distribution list / tuple
@@ -68,7 +61,7 @@ def dic_print(dic, format="%-30s: %12s") -> str:
     return "\n".join(format % (i, j) for i, j in dic.items())
 
 
-def relu(*, val: ifl, threshold: ifl = 0) -> ifl:
+def relu(*, val, threshold=0):
     """
           /
          /
@@ -77,7 +70,7 @@ def relu(*, val: ifl, threshold: ifl = 0) -> ifl:
     return threshold if val < threshold else val
 
 
-def limit(*, val: ifl, limit: ifl) -> ifl:
+def limit(*, val, limit):
     """
        __________  όριο
       /
