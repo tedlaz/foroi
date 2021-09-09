@@ -16,5 +16,11 @@ def mikta_apo_kathara(year: int, kathara, pefka=15, kids=0):
     return tax.mikta_apo_kathara(kathara, kids, pefka)
 
 
+def mikta_apo_kathara_all(period: int, kathara, meres: int, kpk, kids: int):
+    year = int(str(period)[:4])
+    tax = year_selector.get(year, Taxes)()
+    return tax.mikta_apo_kathara_full(period, kathara, meres, kids, kpk)
+
+
 if __name__ == "__main__":
     calculate_tax(2021, 14000)

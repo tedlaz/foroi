@@ -4,6 +4,7 @@ from utils import klimaka, relu
 
 class Tax2021(Taxes):
     year = 2021
+
     def foros_eisodimatos(self, income, children=0):
         scale = (10000, 10000, 10000, 10000)
         syntelestes = (9, 22, 28, 36, 44)
@@ -33,4 +34,4 @@ class Tax2021(Taxes):
 
 if __name__ == "__main__":
     tax = Tax2021()
-    print(tax.mikta_apo_kathara_full(942, 1, 0, 14.2))
+    print(tax.mikta_apo_kathara_full(202101, 249.94, 1, 0, '101'))

@@ -1,6 +1,11 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from taxes import calculate_tax, ergazomenos_period_taxes, mikta_apo_kathara
+from taxes import (
+    calculate_tax,
+    ergazomenos_period_taxes,
+    mikta_apo_kathara,
+    mikta_apo_kathara_all,
+)
 from fastapi.responses import RedirectResponse
 
 
@@ -100,4 +105,17 @@ async def get_mikta(year: int, kathara: float, pefka: float = 14.12, kids: int =
             "info": INFO,
             "data": {},
             "message": f"Calculation is not valid for year {year}",
+        }
+
+
+@app.get("/miktall")
+async def get_miktall(period: int, kathara: float, meres: int, kpk: str, kids: int = 0):
+    try:
+        mikta = mikta_apo_kathara_all(period, kathara, meres, kpk, kids)
+        return {"info": INFO, "data": mikta, "message": "ok"}
+    except NotImplementedError:
+        return {
+            "info": INFO,
+            "data": {},
+            "message": f"Calculation is not valid for period {period}",
         }

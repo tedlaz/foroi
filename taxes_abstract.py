@@ -1,3 +1,6 @@
+import requests
+
+
 class Taxes:
     year = 0
 
@@ -14,6 +17,7 @@ class Taxes:
         raise NotImplementedError
 
     def mikta_apo_kathara(self, kathara, children=0, pefka=14.12):
+
         synt1 = 1 - pefka / 100.0
         mikto = kathara / synt1
         apot = self.foroi_period(kathara, children)
@@ -34,7 +38,16 @@ class Taxes:
         res["mikta"] = mikta_final
         return res
 
-    def mikta_apo_kathara_full(self, kathara, meres, kids, pefka):
+    def mikta_apo_kathara_full(self, period: int, kathara, meres, kids, kpk: str):
+        url = f"https://vwf3fo.deta.dev/kpkper?kpk={kpk}&period={period}"
+        response = requests.get(url).json()
+        if not response['result'][0]['kpk']:
+            raise ValueError
+        pefka = response['result'][0]['enos']
+        pefkatotal = response['result'][0]['total']
+        txtperiod = str(period)
+        month = int(txtperiod[4:])
+        year = int(txtperiod[:4])
         d = round(25 / 200.0 * 1.04167, 7)
         a = round(13 / 150.0, 7)
         p = round(pefka / 100.0, 5)
@@ -46,22 +59,24 @@ class Taxes:
         delta = kathara - res["clean_final"]
 
         i = 0
-        replications = 0
         while abs(delta) > 0.004 and i < 100:
             i += 1
             mikta += delta / meres
             mikta = round(mikta, 5)
             res = self._mikta(mikta, meres, pefka, kids)
+            old_delta = delta
             delta = round(kathara - res["clean_final"], 6)
             print(mikta, delta)
-
-            if abs(round(delta, 2)) <= 0.01:
-                replications += 1
-            if replications >= 3:
-                break
-        print(i)
+            if old_delta * delta < 0:
+                if delta < 0:
+                    break
+        # print(i)
         mikta = round(mikta, 2)
-        return self._mikta(mikta, meres, pefka, kids)
+        fres = self._mikta(mikta, meres, pefka, kids)
+        fres["year"] = year
+        fres["month"] = month
+        fres['efka_kpk'] = response['result'][0]
+        return fres
 
     def _mikta(self, mikta, meres, pefka, kids):
         apod = round(mikta * meres, 2)
@@ -69,14 +84,13 @@ class Taxes:
         eadi = round(mikta * 13 * meres / 150, 2)
         adei = round(mikta * 13 * meres / 150, 2)
         tota = round(apod + doro + eadi + adei, 2)
-        # tota = round(tot1 + adei, 2)
         efka_apod = round(apod * pefka / 100.0, 2)
         efka_doro = round(doro * pefka / 100.0, 2)
         efka_eadi = round(eadi * pefka / 100.0, 2)
         efka_total = round(efka_apod + efka_doro + efka_eadi, 2)
         clean_apod = round(apod - efka_apod, 2)
-        clean_doro = doro - efka_doro
-        clean_eadi = eadi - efka_eadi
+        clean_doro = round(doro - efka_doro, 2)
+        clean_eadi = round(eadi - efka_eadi, 2)
         clean_adei = adei
         clean_total = round(clean_apod + clean_doro + clean_eadi + clean_adei, 2)
         foro_apod = self.foroi_period(clean_apod, kids)["total_taxes"]
@@ -87,7 +101,7 @@ class Taxes:
 
         return {
             "imeromisthio": mikta,
-            'meres': meres,
+            "meres": meres,
             "apod": apod,
             "doro": doro,
             "eadi": eadi,
@@ -95,7 +109,10 @@ class Taxes:
             "efka_apod": efka_apod,
             "efka_doro": efka_doro,
             "efka_eadi": efka_eadi,
-            'clean_apod': clean_apod,
+            "clean_apod": clean_apod,
+            "clean_doro": clean_doro,
+            "clean_eadi": clean_eadi,
+            "clean_adei": clean_adei,
             "foro_apod": foro_apod,
             "foro_doro": foro_doro,
             "foro_eadi": foro_eadi,
