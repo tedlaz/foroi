@@ -6,7 +6,7 @@ def calculate_tax(year: int, income, children=0):
     return tax.foros_eis_eea(income, children)
 
 
-def ergazomenos_period_taxes(year: int, income, kids=0, factor=14):
+def ergazomenos_period_taxes(year: int, income: float, kids: int = 0, factor: int = 14) -> dict:
     tax = year_selector.get(year, Taxes)()
     return tax.foroi_period(income, kids, factor)
 

@@ -92,7 +92,8 @@ class Taxes:
         clean_doro = round(doro - efka_doro, 2)
         clean_eadi = round(eadi - efka_eadi, 2)
         clean_adei = adei
-        clean_total = round(clean_apod + clean_doro + clean_eadi + clean_adei, 2)
+        clean_total = round(clean_apod + clean_doro +
+                            clean_eadi + clean_adei, 2)
         foro_apod = self.foroi_period(clean_apod, kids)["total_taxes"]
         foro_doro = self.foroi_period(clean_doro, kids)["total_taxes"]
         foro_eadi = self.foroi_period(clean_eadi, kids, 28)["total_taxes"]
@@ -138,7 +139,7 @@ class Taxes:
             "after_taxes": after_taxes,
         }
 
-    def foroi_period(self, apodoxes, paidia=0, barytis=14):
+    def foroi_period(self, apodoxes, paidia=0, barytis=14) -> dict:
         yearly = round(apodoxes * barytis, 2)
         foros_etoys = self.foros_eisodimatos(yearly, paidia)
         eea_etoys = self.foros_eea(yearly)
