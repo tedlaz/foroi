@@ -38,6 +38,34 @@ class Taxes:
         res["mikta"] = mikta_final
         return res
 
+    def kathara_periodoy(self, period: int, mikta, kpk: str, kids: int):
+        url = f"https://vwf3fo.deta.dev/kpkper?kpk={kpk}&period={period}"
+        response = requests.get(url).json()
+        if not response['result'][0]['kpk']:
+            raise ValueError
+        pefka = response['result'][0]['enos']
+        pefkatotal = response['result'][0]['total']
+        efka = round(mikta * pefka / 100.0, 2)
+        efkatotal = round(mikta * pefkatotal / 100.0, 2)
+        efkaeti = round(efkatotal-efka, 2)
+        forologiteo = round(mikta - efka, 2)
+        taxres = self.foroi_period(forologiteo, kids)
+        return {
+            'info': 'Καθαρά από μικτά περιόδου',
+            'period': period,
+            'mikta': round(mikta, 2),
+            'kpk': kpk,
+            'kids': kids,
+            'efka-ergazomenoy': efka,
+            'efka-ergofoti': efkaeti,
+            'ekfa-total': efkatotal,
+            'forologiteo': forologiteo,
+            'taxdetails': taxres,
+            'pliroteo': round(forologiteo - taxres['total_taxes'], 2),
+            'kostos-ergodoti': round(mikta + efkaeti, 2)
+
+        }
+
     def mikta_apo_kathara_full(self, period: int, kathara, meres, kids, kpk: str):
         url = f"https://vwf3fo.deta.dev/kpkper?kpk={kpk}&period={period}"
         response = requests.get(url).json()

@@ -5,6 +5,7 @@ from taxes import (
     ergazomenos_period_taxes,
     mikta_apo_kathara,
     mikta_apo_kathara_all,
+    kathara
 )
 from fastapi.responses import RedirectResponse
 
@@ -113,6 +114,19 @@ async def get_miktall(period: int, kathara: float, meres: int, kpk: str, kids: i
     try:
         mikta = mikta_apo_kathara_all(period, kathara, meres, kpk, kids)
         return {"info": INFO, "data": mikta, "message": "ok"}
+    except NotImplementedError:
+        return {
+            "info": INFO,
+            "data": {},
+            "message": f"Calculation is not valid for period {period}",
+        }
+
+
+@app.get("/kathara")
+async def get_kathtara(period: int, mikta: float, kpk: str, kids: int = 0):
+    try:
+        result = kathara(period, mikta, kpk, kids)
+        return {"info": INFO, "data": result, "message": "ok"}
     except NotImplementedError:
         return {
             "info": INFO,
