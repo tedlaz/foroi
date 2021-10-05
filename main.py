@@ -48,6 +48,10 @@ pefka: EFKA percentage for employee
 
 kids: number of kids
 
+## /kathara
+
+example: [https://tpcvju.deta.dev/kathara?period=202109&mikta=800&kpk=101&kids=0](https://tpcvju.deta.dev/kathara?period=202109&mikta=800&kpk=101&kids=0)
+
 """
 
 app = FastAPI(
@@ -123,7 +127,7 @@ async def get_miktall(period: int, kathara: float, meres: int, kpk: str, kids: i
 
 
 @app.get("/kathara")
-async def get_kathtara(period: int, mikta: float, kpk: str, kids: int = 0):
+async def get_kathara(period: int, mikta: float, kpk: str = '101', kids: int = 0):
     try:
         result = kathara(period, mikta, kpk, kids)
         return {"info": INFO, "data": result, "message": "ok"}
