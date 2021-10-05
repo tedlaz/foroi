@@ -1,4 +1,8 @@
 import requests
+from collections import namedtuple
+
+
+Efka = namedtuple('Efka', 'ergazomenos ergodotis total')
 
 
 class Taxes:
@@ -38,26 +42,28 @@ class Taxes:
         res["mikta"] = mikta_final
         return res
 
-    def kathara_periodoy(self, period: int, mikta, kpk: str, kids: int):
-        url = f"https://vwf3fo.deta.dev/kpkper?kpk={kpk}&period={period}"
-        response = requests.get(url).json()
-        if not response['result'][0]['kpk']:
-            raise ValueError
-        pefka = response['result'][0]['enos']
-        pefkatotal = response['result'][0]['total']
-        efka = round(mikta * pefka / 100.0, 2)
-        efkatotal = round(mikta * pefkatotal / 100.0, 2)
-        efkaeti = round(efkatotal-efka, 2)
-        forologiteo = round(mikta - efka, 2)
+    def kathara_periodoy(self, period: int, mikta, kpks: str, kids: int):
+        efkalist = []
+        for kpk in kpks.split(','):
+            efkalist.append(self.get_calc_efka(period, mikta, kpk))
+        efka = efkaeti = efkatotal = 0
+        for elm in efkalist:
+            efka += elm.ergazomenos
+            efkaeti += elm.ergodotis
+            efkatotal += elm.total
+        efka = round(efka, 2)
+        efkaeti = round(efkaeti, 2)
+        efkatotal = round(efkatotal, 2)
+        forologiteo = round(mikta - efka)
         taxres = self.foroi_period(forologiteo, kids)
         return {
-            'info': 'Καθαρά από μικτά περιόδου',
+            'info': 'Πληρωτέες μηνιαίες αποδοχές από μικτές',
             'period': period,
             'mikta': round(mikta, 2),
-            'kpk': kpk,
+            'kpk': kpks,
             'kids': kids,
             'efka-ergazomenoy': efka,
-            'efka-ergofoti': efkaeti,
+            'efka-ergodoti': efkaeti,
             'ekfa-total': efkatotal,
             'forologiteo': forologiteo,
             'taxdetails': taxres,
@@ -65,6 +71,26 @@ class Taxes:
             'kostos-ergodoti': round(mikta + efkaeti, 2)
 
         }
+
+    def get_calc_efka(self, period, mikta, kpk):
+        pefka, pefkatotal = self.get_efka(period, kpk)
+        efkaobj = self.calc_efka(mikta, pefka, pefkatotal)
+        return efkaobj
+
+    def calc_efka(self, mikta, pefka, pefkatotal):
+        efka = round(mikta * pefka / 100.0, 2)
+        efkatotal = round(mikta * pefkatotal / 100.0, 2)
+        efkaeti = round(efkatotal-efka, 2)
+        return Efka(efka, efkaeti, efkatotal)
+
+    def get_efka(self, period, kpk):
+        url = f"https://vwf3fo.deta.dev/kpkper?kpk={kpk}&period={period}"
+        response = requests.get(url).json()
+        if not response['result'][0]['kpk']:
+            raise ValueError
+        pefka = response['result'][0]['enos']
+        pefkatotal = response['result'][0]['total']
+        return pefka, pefkatotal
 
     def mikta_apo_kathara_full(self, period: int, kathara, meres, kids, kpk: str):
         url = f"https://vwf3fo.deta.dev/kpkper?kpk={kpk}&period={period}"

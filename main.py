@@ -128,6 +128,8 @@ async def get_miktall(period: int, kathara: float, meres: int, kpk: str, kids: i
 
 @app.get("/kathara")
 async def get_kathara(period: int, mikta: float, kpk: str = '101', kids: int = 0):
+    if period < 196302:
+        return {"info": INFO, "data": {}, "message": f"Invalid period {period}"}
     try:
         result = kathara(period, mikta, kpk, kids)
         return {"info": INFO, "data": result, "message": "ok"}
